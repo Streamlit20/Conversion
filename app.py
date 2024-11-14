@@ -2,7 +2,6 @@ import streamlit as st
 from pdf2docx import Converter
 from io import BytesIO
 from docx import Document
-from docx2pdf import convert
 import tempfile
 import os
 import base64
@@ -27,26 +26,6 @@ def pdf_to_word(pdf_file):
     return word_io
 
 # Function to convert Word to PDF with formatting
-def word_to_pdf(word_file):
-    # Save uploaded file to a temporary directory
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as temp_word_file:
-        temp_word_file.write(word_file.read())
-        temp_word_path = temp_word_file.name
-
-    # Convert Word document to PDF using docx2pdf
-    temp_pdf_path = temp_word_path.replace(".docx", ".pdf")
-    convert(temp_word_path, temp_pdf_path)
-
-    # Read the generated PDF into memory
-    with open(temp_pdf_path, "rb") as pdf_file:
-        pdf_bytes = pdf_file.read()
-
-    # Cleanup temporary files
-    os.remove(temp_word_path)
-    os.remove(temp_pdf_path)
-
-    # Return PDF as BytesIO object
-    return BytesIO(pdf_bytes)
 
 # Helper function to encode images in base64
 def get_base64_image(image_path):
@@ -61,7 +40,7 @@ def pdf_to_word_page():
         st.session_state["page"] = "Home"
         st.rerun()
     logo_filename = "Ai-automation.jpg"
-    st.sidebar.image(logo_filename, use_column_width=True)
+    st.sidebar.image(logo_filename, use_container_width=True)
     uploaded_files = st.sidebar.file_uploader("Upload PDF resumes", type="pdf", accept_multiple_files=True)
 
     if uploaded_files:
@@ -76,29 +55,7 @@ def pdf_to_word_page():
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 )
 
-# Page for Word to PDF conversion
-def word_to_pdf_page():
-    st.title("Word to PDF Converter")
-    st.text("This application takes Word Documents as input and converts them to PDF Documents.")
-    if st.sidebar.button("Home"):
-        st.session_state["page"] = "Home"
-        st.rerun()
-    logo_filename = "Ai-automation.jpg"
-    st.sidebar.image(logo_filename, use_column_width=True)
-    uploaded_files = st.sidebar.file_uploader("Upload Word documents", type="docx", accept_multiple_files=True)
 
-    if uploaded_files:
-        for uploaded_file in uploaded_files:
-            with st.spinner(f"Converting {uploaded_file.name} to PDF..."):
-                pdf_file = word_to_pdf(uploaded_file)
-                st.success("Conversion completed!")
-                st.download_button(
-                    label="Download PDF File",
-                    data=pdf_file,
-                    file_name=f"{uploaded_file.name.split('.')[0]}.pdf",
-                    mime="application/pdf"
-                )
-# Define the CSS styling for buttons
 button_css = """
     <style>
     .stButton > button {
@@ -142,20 +99,7 @@ def home_page():
             st.session_state["page"] = "PDF to Word"
             st.rerun()
 
-    # Word to PDF clickable image link
-    with col2:
-        word_to_pdf_image = "word_pdf.jpeg"  # Replace with actual image file
-        word_to_pdf_image_base64 = get_base64_image(word_to_pdf_image)
-        
-            
-        st.markdown(
-            f'<a href="#"><img src="data:image/jpeg;base64,{word_to_pdf_image_base64}" alt="Word to PDF" style="width:60%; cursor: pointer;"></a>',
-            unsafe_allow_html=True
-        )
-        if st.button("Click Here for Word to PDF Conversion"):
-            st.session_state["page"] = "Word to PDF"
-            st.rerun()
-
+    
 # Main app controller
 if "page" not in st.session_state:
     st.session_state["page"] = "Home"
@@ -165,5 +109,3 @@ if st.session_state["page"] == "Home":
     home_page()
 elif st.session_state["page"] == "PDF to Word":
     pdf_to_word_page()
-elif st.session_state["page"] == "Word to PDF":
-    word_to_pdf_page()
